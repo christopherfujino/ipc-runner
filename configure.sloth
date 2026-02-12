@@ -1,0 +1,22 @@
+#!/usr/bin/env sloth
+
+let cxx = 'clang++'
+let release = 'Debug'
+let build = Directory("${ $scriptDir }/build")
+
+if not build.exists() {
+    build.create()
+    with($cwd = build.path) {
+        [
+            'cmake',
+            '-GNinja',
+            "-DCMAKE_CXX_COMPILER=${cxx}",
+            "-DCMAKE_BUILD_TYPE=${release}",
+            '..',
+        ]!
+    }
+}
+
+with($cwd = build.path) {
+    'cmake --build .'!
+}

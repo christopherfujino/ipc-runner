@@ -1,0 +1,8 @@
+*.o
+*.obj
+a.out
+
+build/
+
+# clangd
+.cache/
