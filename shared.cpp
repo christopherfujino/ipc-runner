@@ -49,7 +49,6 @@ public:
   }
 
   void write(Command cmd) {
-    printf("Calling write(%d)\n", (int)cmd);
     int result = fputc((int)cmd, _ptr);
     if (result == EOF) {
       throw std::runtime_error("Failed to write to IPC channel");

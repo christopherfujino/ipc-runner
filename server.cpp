@@ -48,7 +48,6 @@ int main(int argc, char **argv) {
   bool parseCommand = false;
   for (int i = 1; i < argc; i++) {
     if (parseCommand) {
-      printf("pushing %s at %d...\n", argv[i], i);
       targetCommand.push_back(argv[i]);
     } else if (strncmp(argv[i], "--", 3) == 0) {
       parseCommand = true;
@@ -59,7 +58,7 @@ int main(int argc, char **argv) {
     fprintf(stderr, "Usage: ipcr-server -- [COMMAND] [ARGS]...");
   }
 
-  printf("Starting IPC command server...\n\n");
+  printf("Starting ipc-runner-server...\n\n");
   IPC::create();
   IPC::ReadChannel ipc = IPC::ReadChannel();
 
