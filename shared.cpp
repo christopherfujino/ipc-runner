@@ -1,10 +1,7 @@
 module;
 
-#include <cerrno>  // for errno
 #include <cstdio>  // for fopen()
 #include <cstdlib> // for exit(), getenv()
-#include <cstring> // for strerror()
-#include <format>
 #include <stdexcept>  // for std::runtime_error()
 #include <sys/stat.h> // for mkfifo()
 #include <unistd.h>
@@ -97,12 +94,8 @@ private:
 
 export void create() {
   const char *path = getPath();
-  int result = unlink(path);
-  if (result < 0) {
-    throw std::runtime_error(std::format(
-        "FIFO already exists at `%s` and it could not be unlinked: %s", path,
-        strerror(errno)));
-  }
+  // Don't check for errors
+  unlink(path);
   int success = mkfifo(path, 0600);
   if (success != 0) {
     fprintf(stderr, "Failure to create IPC FIFO at `%s`\n", getPath());
