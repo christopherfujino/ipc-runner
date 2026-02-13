@@ -46,6 +46,7 @@ public:
   }
 
   void write(Command cmd) {
+    // TODO time this out
     int result = fputc((int)cmd, _ptr);
     if (result == EOF) {
       throw std::runtime_error("Failed to write to IPC channel");
