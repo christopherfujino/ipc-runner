@@ -1,9 +1,13 @@
 module;
 
+#include <cerrno>  // for errno
 #include <cstdio>  // for fopen()
 #include <cstdlib> // for exit(), getenv()
+#include <cstring> // for strerror()
+#include <format>
 #include <stdexcept>  // for std::runtime_error()
 #include <sys/stat.h> // for mkfifo()
+#include <unistd.h>
 
 export module M;
 
@@ -68,6 +72,13 @@ public:
     }
   }
 
+  ~ReadChannel() {
+    int result = unlink(getPath());
+    if (result < 0) {
+      fprintf(stderr, "Warning: failed to delete %s", getPath());
+    }
+  }
+
   Command read() {
     int b = fgetc(_ptr);
     if (b == EOF) {
@@ -86,7 +97,14 @@ private:
 };
 
 export void create() {
-  int success = mkfifo(getPath(), 0600);
+  const char *path = getPath();
+  int result = unlink(path);
+  if (result < 0) {
+    throw std::runtime_error(std::format(
+        "FIFO already exists at `%s` and it could not be unlinked: %s", path,
+        strerror(errno)));
+  }
+  int success = mkfifo(path, 0600);
   if (success != 0) {
     fprintf(stderr, "Failure to create IPC FIFO at `%s`\n", getPath());
     exit(1);
