@@ -1,21 +1,98 @@
 module;
 
 #include <cstdio>  // for fopen()
-#include <cstdlib> // for exit()
-#include <fcntl.h> // for O_RDONLY
+#include <cstdlib> // for exit(), getenv()
+#include <stdexcept>  // for std::runtime_error()
+#include <sys/stat.h> // for mkfifo()
 
 export module M;
 
 namespace __CHRIS_MONOREPO__CPP__IPC__SHARED {
 
-export FILE *ipcOpenRead() {
-  constexpr const char *path = "/home/chris/git/ipc/fifo";
-  FILE *f = fopen(path, "r");
-  if (f == nullptr) {
-    fprintf(stderr, "Failure to open \"%s\" for reading\n", path);
+export enum class Command : unsigned char {
+  BUILD,
+  // TODO GET_VERSION,
+};
+
+const char *getPath() {
+  static const char *cachedPath = nullptr;
+
+  if (cachedPath != nullptr) {
+    return cachedPath;
+  }
+
+  const char *homePath = getenv("HOME");
+  if (homePath == nullptr) {
+    fprintf(stderr, "TODO: figure out a place to keep the named FIFO if user "
+                    "does not have $HOME set in env\n");
     exit(1);
   }
-  return f;
+  cachedPath = "/tmp/chris.fifo";
+
+  return cachedPath;
 }
+
+namespace IPC {
+
+export class WriteChannel {
+public:
+  WriteChannel() {
+    _ptr = fopen(getPath(), "w");
+    if (_ptr == nullptr) {
+      fprintf(stderr, "Failure to open \"%s\" for writing\n", getPath());
+      exit(1);
+    }
+  }
+
+  void write(Command cmd) {
+    printf("Calling write(%d)\n", (int)cmd);
+    int result = fputc((int)cmd, _ptr);
+    if (result == EOF) {
+      throw std::runtime_error("Failed to write to IPC channel");
+    }
+  }
+
+private:
+  FILE *_ptr = nullptr;
+};
+
+export class ReadChannel {
+public:
+  ReadChannel() {
+    // If this does not include write, the first client will close the pipe
+    // when it's done using it.
+    _ptr = fopen(getPath(), "r+");
+    if (_ptr == nullptr) {
+      fprintf(stderr, "Failure to open \"%s\" for reading\n", getPath());
+      exit(1);
+    }
+  }
+
+  Command read() {
+    int b = fgetc(_ptr);
+    if (b == EOF) {
+      if (ferror(_ptr) != 0) {
+        throw std::runtime_error("Error reading from IPC channel!");
+      }
+      // else EOF
+      throw std::runtime_error("TODO figure out what to do on EOF");
+    }
+
+    return (Command)b;
+  }
+
+private:
+  FILE *_ptr = nullptr;
+};
+
+export void create() {
+  int success = mkfifo(getPath(), 0600);
+  if (success != 0) {
+    fprintf(stderr, "Failure to create IPC FIFO at `%s`\n", getPath());
+    exit(1);
+  }
+}
+
+} // namespace IPC
 
 } // namespace __CHRIS_MONOREPO__CPP__IPC__SHARED
