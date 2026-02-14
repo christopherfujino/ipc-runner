@@ -20,9 +20,10 @@ void _exec(std::string cmd) {
 
   int result = system(cmd_s);
   if (result != 0) {
-    throw std::runtime_error(std::format("Command failed with {}\n", result));
+    fprintf(stderr, "\nCommand failed with %d\n\n", result);
+  } else {
+    printf("\nSuccess!\n\n");
   }
-  printf("\nSuccess!\n\n");
 }
 
 int main(int argc, char **argv) {
@@ -42,9 +43,8 @@ int main(int argc, char **argv) {
       fprintf(stderr, "Usage: ipc-runner-server -- [COMMAND_STRING]\n");
     } else {
       fprintf(stderr, "Usage: ipc-runner-server -- [COMMAND_STRING]\n\n");
-      fprintf(
-          stderr,
-          "Your desired command and its arguments should be a single string.\n");
+      fprintf(stderr, "Your desired command and its arguments should be a "
+                      "single string.\n");
       // TODO construct the string programmatically
     }
     return 1;
